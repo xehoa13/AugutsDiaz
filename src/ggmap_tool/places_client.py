@@ -29,6 +29,15 @@ class PlacesClient:
             response = self._session.get(NEARBY_SEARCH_URL, params=params, timeout=30)
             response.raise_for_status()
             payload = response.json()
+            status = payload.get("status")
+            if status == "ZERO_RESULTS":
+                break
+            if status != "OK":
+                error_message = payload.get("error_message")
+                detail = f": {error_message}" if error_message else ""
+                raise RuntimeError(
+                    f"Nearby Search API error ({status or 'missing status'}){detail}"
+                )
             for result in payload.get("results", []):
                 place_id = result.get("place_id")
                 if not place_id:
